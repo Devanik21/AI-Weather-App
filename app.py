@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 from datetime import datetime, timedelta
+import ephem
 import math
 
 st.set_page_config(
@@ -9,15 +10,30 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Moon Phase Calculation ---
+# --- Accurate Moon Phase Calculation ---
 def get_moon_phase(date: datetime):
-    diff = date - datetime(2001, 1, 1)
-    days = diff.days + (diff.seconds / 86400)
-    lunations = 0.20439731 + (days * 0.03386319269)
-    phase_index = math.floor((lunations % 1) * 8)
-    phases = ["🌑 New", "🌒 Waxing Crescent", "🌓 First Quarter", "🌔 Waxing Gibbous",
-              "🌕 Full", "🌖 Waning Gibbous", "🌗 Last Quarter", "🌘 Waning Crescent"]
-    return phases[phase_index]
+    moon = ephem.Moon()
+    observer = ephem.Observer()
+    observer.date = date
+    moon.compute(observer)
+    phase = moon.phase  # 0 to ~29.53
+
+    if phase < 1.5:
+        return "🌑 New"
+    elif phase < 6.7:
+        return "🌒 Waxing Crescent"
+    elif phase < 13.8:
+        return "🌓 First Quarter"
+    elif phase < 20.7:
+        return "🌔 Waxing Gibbous"
+    elif phase < 23.8:
+        return "🌕 Full"
+    elif phase < 27.0:
+        return "🌖 Waning Gibbous"
+    elif phase < 29.0:
+        return "🌗 Last Quarter"
+    else:
+        return "🌘 Waning Crescent"
 
 # --- Cyberpunk CSS ---
 st.markdown("""
@@ -155,4 +171,4 @@ Add 1–2 helpful tips like: “Pack an umbrella” or “Wear sunscreen.”
 
 # --- Footer ---
 st.markdown("---")
-st.caption("⚡ Made with Gemini Flash | Neon Nights, Accurate Insights 🌃")
+st.caption("⚡ Powered by Gemini Flash | Accurate Moon Phase by PyEphem 🌕")
