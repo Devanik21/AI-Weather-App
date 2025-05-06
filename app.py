@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import os
+from datetime import datetime, timedelta
 
 st.set_page_config(
     page_title="AI Weather Assistant",
@@ -45,24 +46,38 @@ elif submit:
         model = genai.GenerativeModel(model_name="gemini-2.0-flash")
         
         with st.spinner("Fetching weather information..."):
-            # Construct the prompt based on user inputs
+            # Current date and time
+            now = datetime.now()
+            today_str = now.strftime("%A, %d %B %Y")  # e.g., Monday, 06 May 2025
+            
+            # Date description based on user choice
+            if time_frame == "Current weather":
+                date_info = f"as of now ({today_str})"
+            elif time_frame == "Today's forecast":
+                date_info = f"for today ({today_str})"
+            elif time_frame == "Weekly forecast":
+                week_dates = [(now + timedelta(days=i)).strftime("%A, %d %B") for i in range(7)]
+                date_info = f"for the upcoming week ({', '.join(week_dates)})"
+            
             detail_level = "detailed" if show_details else "brief"
-            
+
+            # Prompt construction
             prompt = f"""
-            Act as a professional weather forecaster. Provide {detail_level} weather information for {location}.
-            Focus on {time_frame.lower()}.
-            
-            If detailed information is requested, include:
-            - Temperature (actual and feels like)
-            - Humidity and precipitation chances
-            - Wind speed and direction
-            - Air quality
-            - Sunrise and sunset times
-            - Any weather alerts or warnings
-            
-            Format the information in a clear, organized way. If you're not sure about specific data, mention that it's an estimate.
-            """
-            
+Act as a professional weather forecaster.
+Provide {detail_level} weather information for **{location}**, {date_info}.
+
+If detailed information is requested, include:
+- Temperature (actual and feels like)
+- Humidity and precipitation chances
+- Wind speed and direction
+- Air quality
+- Sunrise and sunset times
+- Any weather alerts or warnings
+
+Use clear formatting (like bullet points). If unsure about data, state it's an estimate.
+Also provide 1–2 friendly weather tips (e.g., carry an umbrella or stay hydrated).
+"""
+
             # Generate the response
             response = model.generate_content(prompt)
             
@@ -78,7 +93,6 @@ elif submit:
                 st.caption("Weather visualization")
                 weather_emoji = "🌤️"  # Default emoji
                 
-                # Simple logic to display different weather emoji (simplified)
                 if "rain" in response.text.lower():
                     weather_emoji = "🌧️"
                 elif "cloud" in response.text.lower():
@@ -91,7 +105,7 @@ elif submit:
                     weather_emoji = "⛈️"
                 
                 st.markdown(f"<h1 style='text-align: center; font-size: 5rem;'>{weather_emoji}</h1>", unsafe_allow_html=True)
-                
+
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
         if "403" in str(e) or "401" in str(e):
