@@ -1,114 +1,80 @@
 import streamlit as st
 import google.generativeai as genai
 from datetime import datetime, timedelta
-import ephem
-import math
 
 st.set_page_config(
-    page_title="Cyberpunk AI Weather",
-    page_icon="🌌",
+    page_title="AI Weather Assistant",
+    page_icon="🌙",
     layout="wide"
 )
 
-# --- Accurate Moon Phase Calculation ---
-def get_moon_phase(date: datetime):
-    moon = ephem.Moon()
-    observer = ephem.Observer()
-    observer.date = date
-    moon.compute(observer)
-    phase = moon.phase  # 0 to ~29.53
-
-    if phase < 1.5:
-        return "🌑 New"
-    elif phase < 6.7:
-        return "🌒 Waxing Crescent"
-    elif phase < 13.8:
-        return "🌓 First Quarter"
-    elif phase < 20.7:
-        return "🌔 Waxing Gibbous"
-    elif phase < 23.8:
-        return "🌕 Full"
-    elif phase < 27.0:
-        return "🌖 Waning Gibbous"
-    elif phase < 29.0:
-        return "🌗 Last Quarter"
-    else:
-        return "🌘 Waning Crescent"
-
-# --- Cyberpunk CSS ---
+# Custom CSS for dark mode styling
 st.markdown("""
     <style>
-    body {
-        background-color: #000000;
-    }
     .main-title {
-        background: linear-gradient(90deg, #ff0080, #7928ca);
+        background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
         padding: 1rem;
-        border-radius: 14px;
+        border-radius: 12px;
         text-align: center;
-        color: white;
+        color: #ffffff;
         font-size: 2.5rem;
         font-weight: bold;
         margin-bottom: 20px;
-        box-shadow: 0px 0px 20px #ff00cc;
-        letter-spacing: 1.5px;
+        box-shadow: 0px 0px 15px #00ffe0;
     }
+
     .emoji-card {
+        background-color: transparent;
+        padding: 1rem;
         text-align: center;
-        animation: pulse 2s infinite;
     }
+
     .response-card {
-        padding: 1.3rem;
-        border-left: 4px solid #ff00cc;
+        padding: 1.2rem;
+        border-left: 4px solid #00ffe0;
         border-radius: 8px;
         font-size: 1.05rem;
         color: #e0e0e0;
-        background-color: rgba(20, 20, 20, 0.5);
+        background-color: rgba(0, 0, 0, 0.3);
     }
-    .moon {
-        font-size: 1.2rem;
-        color: #8affff;
-        padding-top: 10px;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.08); }
-        100% { transform: scale(1); }
-    }
+
     .stTextInput > div > div > input {
         color: white !important;
     }
+
     .stTextInput > div > label {
         color: #ccc !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Sidebar ---
+# Sidebar
 with st.sidebar:
-    st.title("🌌 Cyberpunk Weather")
+    st.title("🌙 AI Weather (Dark)")
     api_key = st.text_input("Enter Gemini API Key", type="password")
-    st.caption("🔐 We never store your key")
+    st.caption("Your API key is kept private and not stored")
 
-    location = st.text_input("📍 Enter location", placeholder="Neo-Tokyo, Night City...")
-    time_frame = st.selectbox("🕒 Select time frame", ["Current weather", "Today's forecast", "Weekly forecast"])
-    show_details = st.checkbox("🌠 Show detailed info", value=True)
-    submit = st.button("⚡ Get Weather")
+    location = st.text_input("Enter location", placeholder="Tokyo, Berlin, etc.")
+    time_frame = st.selectbox(
+        "Select time frame",
+        ["Current weather", "Today's forecast", "Weekly forecast"]
+    )
+    show_details = st.checkbox("Show detailed information", value=True)
+    submit = st.button("Get Weather Info")
 
-# --- Title ---
-st.markdown("<div class='main-title'>🌌 Cyberpunk AI Weather Assistant</div>", unsafe_allow_html=True)
+# Main Title
+st.markdown("<div class='main-title'>🌙 AI Weather Assistant</div>", unsafe_allow_html=True)
 
-# --- Weather Logic ---
 if not api_key:
-    st.info("Please enter your Gemini API key in the sidebar.")
+    st.info("Please enter your Gemini API key in the sidebar to start.")
 elif not location:
-    st.info("Enter a location to get started.")
+    st.info("Enter a location in the sidebar to get weather information.")
 elif submit:
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(model_name="gemini-2.0-flash")
 
-        with st.spinner("🌐 Fetching weather intel..."):
+        with st.spinner("Retrieving weather data... 🌌"):
             now = datetime.now()
             today_str = now.strftime("%A, %d %B %Y")
 
@@ -117,34 +83,37 @@ elif submit:
             elif time_frame == "Today's forecast":
                 date_info = f"for today ({today_str})"
             elif time_frame == "Weekly forecast":
-                week_dates = [(now + timedelta(days=i)).strftime("%a, %b %d") for i in range(7)]
-                date_info = f"for the upcoming week: {', '.join(week_dates)}"
+                week_dates = [(now + timedelta(days=i)).strftime("%A, %d %B") for i in range(7)]
+                date_info = f"for the upcoming week ({', '.join(week_dates)})"
 
             detail_level = "detailed" if show_details else "brief"
 
             prompt = f"""
-Act as a professional weather forecaster in a cyberpunk world.
-Provide {detail_level} weather info for **{location}**, {date_info}.
+Act as a professional weather forecaster.
+Provide {detail_level} weather information for **{location}**, {date_info}.
 
-If detailed:
+If detailed information is requested, include:
 - Temperature (actual and feels like)
-- Humidity, rain chance
-- Wind speed & direction
-- Air quality index (AQI)
-- Sunrise/sunset times
-- Alerts or warnings
+- Humidity and precipitation chances
+- Wind speed and direction
+- Air quality
+- Sunrise and sunset times
+- Any weather alerts or warnings
 
-Add 1–2 helpful tips like: “Pack an umbrella” or “Wear sunscreen.”
+Use clear formatting (like bullet points). If unsure about data, state it's an estimate.
+Also provide 1–2 friendly weather tips (e.g., carry an umbrella or stay hydrated).
 """
 
             response = model.generate_content(prompt)
 
-            st.subheader(f"📡 {location} — {time_frame}")
+            st.subheader(f"📍 {location} — {time_frame}")
             st.markdown(f"<div class='response-card'>{response.text}</div>", unsafe_allow_html=True)
 
-            # Emoji & Moon Phase
             col1, col2 = st.columns([3, 1])
             with col2:
+                st.markdown("<div class='emoji-card'>", unsafe_allow_html=True)
+                st.caption("Weather visual")
+
                 weather_emoji = "🌤️"
                 text = response.text.lower()
                 if "rain" in text:
@@ -158,17 +127,16 @@ Add 1–2 helpful tips like: “Pack an umbrella” or “Wear sunscreen.”
                 elif "storm" in text or "thunder" in text:
                     weather_emoji = "⛈️"
 
-                moon = get_moon_phase(datetime.now())
-                st.markdown(f"<div class='emoji-card'><h1 style='font-size: 6rem;'>{weather_emoji}</h1></div>", unsafe_allow_html=True)
-                st.markdown(f"<div class='moon'>🌙 Moon phase: {moon}</div>", unsafe_allow_html=True)
+                st.markdown(f"<h1 style='font-size: 6rem'>{weather_emoji}</h1>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"Oops: {str(e)}")
+        st.error(f"An error occurred: {str(e)}")
         if "403" in str(e) or "401" in str(e):
-            st.error("API key error. Double-check your key.")
+            st.error("API key error. Please check your Gemini API key.")
         elif "429" in str(e):
-            st.error("Too many requests. Try again soon.")
+            st.error("Rate limit exceeded. Please try again later.")
 
-# --- Footer ---
+# Footer
 st.markdown("---")
-st.caption("⚡ Powered by Gemini Flash | Accurate Moon Phase by PyEphem 🌕")
+st.caption("✨ Powered by Gemini 2.0 Flash | Dark Mode Activated 🌌")
