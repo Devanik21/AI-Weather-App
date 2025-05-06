@@ -4,50 +4,57 @@ from datetime import datetime, timedelta
 
 st.set_page_config(
     page_title="AI Weather Assistant",
-    page_icon="🌤️",
+    page_icon="🌙",
     layout="wide"
 )
 
-# Inject some CSS for color magic ✨
+# Custom CSS for dark mode styling
 st.markdown("""
     <style>
     .main-title {
-        background: linear-gradient(90deg, #fceabb, #f8b500);
+        background: linear-gradient(90deg, #0f2027, #203a43, #2c5364);
         padding: 1rem;
         border-radius: 12px;
         text-align: center;
-        color: white;
+        color: #ffffff;
         font-size: 2.5rem;
         font-weight: bold;
         margin-bottom: 20px;
+        box-shadow: 0px 0px 15px #00ffe0;
     }
 
     .emoji-card {
-        background-color: #fff6f6;
-        border-radius: 20px;
+        background-color: transparent;
         padding: 1rem;
-        box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
         text-align: center;
     }
 
     .response-card {
-        background-color: #f9f9ff;
-        padding: 1.5rem;
-        border-radius: 15px;
-        border-left: 5px solid #a0c4ff;
-        box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+        padding: 1.2rem;
+        border-left: 4px solid #00ffe0;
+        border-radius: 8px;
         font-size: 1.05rem;
+        color: #e0e0e0;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .stTextInput > div > div > input {
+        color: white !important;
+    }
+
+    .stTextInput > div > label {
+        color: #ccc !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # Sidebar
 with st.sidebar:
-    st.title("🌤️ AI Weather")
+    st.title("🌙 AI Weather (Dark)")
     api_key = st.text_input("Enter Gemini API Key", type="password")
     st.caption("Your API key is kept private and not stored")
 
-    location = st.text_input("Enter location", placeholder="New York, Paris, Tokyo...")
+    location = st.text_input("Enter location", placeholder="Tokyo, Berlin, etc.")
     time_frame = st.selectbox(
         "Select time frame",
         ["Current weather", "Today's forecast", "Weekly forecast"]
@@ -55,8 +62,8 @@ with st.sidebar:
     show_details = st.checkbox("Show detailed information", value=True)
     submit = st.button("Get Weather Info")
 
-# Title
-st.markdown("<div class='main-title'>🌤️ AI Weather Assistant</div>", unsafe_allow_html=True)
+# Main Title
+st.markdown("<div class='main-title'>🌙 AI Weather Assistant</div>", unsafe_allow_html=True)
 
 if not api_key:
     st.info("Please enter your Gemini API key in the sidebar to start.")
@@ -67,7 +74,7 @@ elif submit:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(model_name="gemini-2.0-flash")
 
-        with st.spinner("Fetching weather information... ☁️"):
+        with st.spinner("Retrieving weather data... 🌌"):
             now = datetime.now()
             today_str = now.strftime("%A, %d %B %Y")
 
@@ -105,7 +112,7 @@ Also provide 1–2 friendly weather tips (e.g., carry an umbrella or stay hydrat
             col1, col2 = st.columns([3, 1])
             with col2:
                 st.markdown("<div class='emoji-card'>", unsafe_allow_html=True)
-                st.caption("Weather visualization")
+                st.caption("Weather visual")
 
                 weather_emoji = "🌤️"
                 text = response.text.lower()
@@ -132,4 +139,4 @@ Also provide 1–2 friendly weather tips (e.g., carry an umbrella or stay hydrat
 
 # Footer
 st.markdown("---")
-st.caption("✨ Powered by Google's Gemini 2.0 Flash | Styled with love 💛")
+st.caption("✨ Powered by Gemini 2.0 Flash | Dark Mode Activated 🌌")
