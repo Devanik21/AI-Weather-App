@@ -1,3 +1,29 @@
-streamlit
-google-generativeai
-ephem
+# Requirements for AI Weather Assistant Pro
+# Generated on 2025-05-06
+
+# Core functionality
+streamlit>=1.24.0
+google-generativeai>=0.3.0
+
+# Data processing & visualization
+pandas>=2.0.0
+plotly>=5.14.0
+matplotlib>=3.7.1
+
+# Map & location services
+folium>=0.14.0
+streamlit-folium>=0.13.0
+geopy>=2.3.0
+
+# API & data handling
+requests>=2.31.0
+pycountry>=22.3.5
+Pillow>=9.5.0
+
+# Weather data (optional but recommended)
+pyowm>=3.3.0         # OpenWeatherMap API wrapper
+
+# Environment & system utilities
+python-dotenv>=1.0.0 # For API key management
+protobuf>=4.23.0     # For Google APIs
+typing-extensions>=4.5.0
