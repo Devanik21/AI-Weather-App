@@ -1,6 +1,5 @@
 import streamlit as st
 import google.generativeai as genai
-import os
 from datetime import datetime, timedelta
 
 st.set_page_config(
@@ -9,29 +8,55 @@ st.set_page_config(
     layout="wide"
 )
 
-# Sidebar for API key input
+# Inject some CSS for color magic ✨
+st.markdown("""
+    <style>
+    .main-title {
+        background: linear-gradient(90deg, #fceabb, #f8b500);
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .emoji-card {
+        background-color: #fff6f6;
+        border-radius: 20px;
+        padding: 1rem;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .response-card {
+        background-color: #f9f9ff;
+        padding: 1.5rem;
+        border-radius: 15px;
+        border-left: 5px solid #a0c4ff;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+        font-size: 1.05rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Sidebar
 with st.sidebar:
     st.title("🌤️ AI Weather")
     api_key = st.text_input("Enter Gemini API Key", type="password")
     st.caption("Your API key is kept private and not stored")
-    
-    # Input for location
+
     location = st.text_input("Enter location", placeholder="New York, Paris, Tokyo...")
-    
-    # Time frame selection
     time_frame = st.selectbox(
         "Select time frame",
         ["Current weather", "Today's forecast", "Weekly forecast"]
     )
-    
-    # Additional options
     show_details = st.checkbox("Show detailed information", value=True)
-    
-    # Submit button
     submit = st.button("Get Weather Info")
 
-# Main content area
-st.title("AI Weather Assistant")
+# Title
+st.markdown("<div class='main-title'>🌤️ AI Weather Assistant</div>", unsafe_allow_html=True)
 
 if not api_key:
     st.info("Please enter your Gemini API key in the sidebar to start.")
@@ -39,18 +64,13 @@ elif not location:
     st.info("Enter a location in the sidebar to get weather information.")
 elif submit:
     try:
-        # Configure the Gemini API
         genai.configure(api_key=api_key)
-        
-        # Create a model instance
         model = genai.GenerativeModel(model_name="gemini-2.0-flash")
-        
-        with st.spinner("Fetching weather information..."):
-            # Current date and time
+
+        with st.spinner("Fetching weather information... ☁️"):
             now = datetime.now()
-            today_str = now.strftime("%A, %d %B %Y")  # e.g., Monday, 06 May 2025
-            
-            # Date description based on user choice
+            today_str = now.strftime("%A, %d %B %Y")
+
             if time_frame == "Current weather":
                 date_info = f"as of now ({today_str})"
             elif time_frame == "Today's forecast":
@@ -58,10 +78,9 @@ elif submit:
             elif time_frame == "Weekly forecast":
                 week_dates = [(now + timedelta(days=i)).strftime("%A, %d %B") for i in range(7)]
                 date_info = f"for the upcoming week ({', '.join(week_dates)})"
-            
+
             detail_level = "detailed" if show_details else "brief"
 
-            # Prompt construction
             prompt = f"""
 Act as a professional weather forecaster.
 Provide {detail_level} weather information for **{location}**, {date_info}.
@@ -78,33 +97,31 @@ Use clear formatting (like bullet points). If unsure about data, state it's an e
 Also provide 1–2 friendly weather tips (e.g., carry an umbrella or stay hydrated).
 """
 
-            # Generate the response
             response = model.generate_content(prompt)
-            
-            # Display location and time frame
-            st.subheader(f"{location} - {time_frame}")
-            
-            # Display the weather information
-            st.markdown(response.text)
-            
-            # Add visual representation
+
+            st.subheader(f"📍 {location} — {time_frame}")
+            st.markdown(f"<div class='response-card'>{response.text}</div>", unsafe_allow_html=True)
+
             col1, col2 = st.columns([3, 1])
             with col2:
+                st.markdown("<div class='emoji-card'>", unsafe_allow_html=True)
                 st.caption("Weather visualization")
-                weather_emoji = "🌤️"  # Default emoji
-                
-                if "rain" in response.text.lower():
+
+                weather_emoji = "🌤️"
+                text = response.text.lower()
+                if "rain" in text:
                     weather_emoji = "🌧️"
-                elif "cloud" in response.text.lower():
+                elif "cloud" in text:
                     weather_emoji = "☁️"
-                elif "sunny" in response.text.lower() or "clear" in response.text.lower():
+                elif "sunny" in text or "clear" in text:
                     weather_emoji = "☀️"
-                elif "snow" in response.text.lower():
+                elif "snow" in text:
                     weather_emoji = "❄️"
-                elif "storm" in response.text.lower() or "thunder" in response.text.lower():
+                elif "storm" in text or "thunder" in text:
                     weather_emoji = "⛈️"
-                
-                st.markdown(f"<h1 style='text-align: center; font-size: 5rem;'>{weather_emoji}</h1>", unsafe_allow_html=True)
+
+                st.markdown(f"<h1 style='font-size: 6rem'>{weather_emoji}</h1>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"An error occurred: {str(e)}")
@@ -115,4 +132,4 @@ Also provide 1–2 friendly weather tips (e.g., carry an umbrella or stay hydrat
 
 # Footer
 st.markdown("---")
-st.caption("AI Weather Assistant uses Google's Gemini-2.0-Flash model to provide weather information.")
+st.caption("✨ Powered by Google's Gemini 2.0 Flash | Styled with love 💛")
